@@ -1,10 +1,14 @@
 mail:
   imap:
     ssl: true
-    host: imap.gmail.com
-    port: 993
+    host: "imap-endpoint"
+    port: "imap-port"
     username: "change"
     password: "it"
+
+io:
+  arcmail:
+    basePath: "basePath"
 
 # Task execution
 spring:

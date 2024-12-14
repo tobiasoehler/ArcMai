@@ -2,6 +2,8 @@ package io.arcmai.mail.config;
 
 import io.arcmai.mail.service.MailHandlerService;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.search.AndTerm;
+import jakarta.mail.search.SearchTerm;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -58,10 +60,9 @@ public class MailReceiverConfiguration {
         log.info("IMAP connection url: {}", storeUrl);
 
         ImapMailReceiver imapMailReceiver = new ImapMailReceiver(storeUrl);
-        //imapMailReceiver.setShouldMarkMessagesAsRead(true);
         imapMailReceiver.setShouldDeleteMessages(false);
         imapMailReceiver.setMaxFetchSize(10);
-        // imapMailReceiver.setAutoCloseFolder(true);
+        imapMailReceiver.setSearchTermStrategy(new CustomSearchTermStrategy());
 
         Properties javaMailProperties = new Properties();
         javaMailProperties.put("mail.imap.socketFactory.class", "javax.net.ssl.SSLSocketFactory");

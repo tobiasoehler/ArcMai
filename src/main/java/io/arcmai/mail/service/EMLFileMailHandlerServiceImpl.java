@@ -4,14 +4,23 @@ import jakarta.mail.*;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.UUID;
 
 @Service
 public class EMLFileMailHandlerServiceImpl implements MailHandlerService {
+
+    @Value("${io.arcmail.basePath}")
+    private String basePath;
+    @Value("${mail.imap.username}")
+    private String username;
+
 
     private static final Logger log = LoggerFactory.getLogger(EMLFileMailHandlerServiceImpl.class);
 
@@ -33,7 +42,7 @@ public class EMLFileMailHandlerServiceImpl implements MailHandlerService {
                     log.error("Error occurred during process message", e);
                     return false;
                 }
-            }).forEach(this::extractMail);
+            }).forEach(x -> extractMail(x, folder));
 
             folder.close(true);
 
@@ -51,14 +60,37 @@ public class EMLFileMailHandlerServiceImpl implements MailHandlerService {
         folder.fetch(messages, contentsProfile);
     }
 
-    private void extractMail(Message message) {
+    // Method to replace invalid characters in a file path
+    public static String replaceInvalidCharacters(String path) {
+        // Windows invalid characters (including / and \)
+        String invalidChars = "[<>:\"/\\|?*]";
+
+        // Replace invalid characters with an underscore or any other replacement
+        return path.replaceAll(invalidChars, "_");
+    }
+
+    private void extractMail(Message message, Folder folder) {
         try {
             final MimeMessage messageToExtract = (MimeMessage) message;
-            // TODO path dynamic
-            String logFileName = "C:\\temp\\"+ UUID.randomUUID()+".eml";
-            messageToExtract.writeTo(new FileOutputStream(logFileName));
+            String path = String.format("%s/%s/%s",basePath, username, getFolderPath(folder));
+            Files.createDirectories(Path.of(path));
+            String logFileName =
+                            String.format("%s/%s-%s.eml",path, replaceInvalidCharacters(message.getSubject()), replaceInvalidCharacters(((MimeMessage) message).getMessageID()));
+            if (!new File(logFileName).exists()){
+                messageToExtract.writeTo(new FileOutputStream(logFileName));
+            }
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
+    }
+
+    private String getFolderPath(Folder folder) throws MessagingException {
+        String folderPath = "";
+        if (folder != null && !folder.getName().isEmpty()){
+            folderPath += folder.getName()+"/";
+            folderPath += getFolderPath(folder.getParent());
+        }
+
+        return folderPath;
     }
 }
