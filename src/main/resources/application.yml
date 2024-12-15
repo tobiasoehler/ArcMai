@@ -23,3 +23,6 @@ spring:
       thread-name-prefix: mail-receiver-
       pool:
         size: 2
+  datasource:
+    url: "jdbc:h2:file:./target/db/ArcMai"
+    driver-class-name: org.h2.Driver
