@@ -8,7 +8,8 @@ create table IMAP_SETTING (
     USERNAME varchar,
     PASSWORD varchar,
     HOST varchar,
-    PORT integer
+    PORT integer,
+    FOLDER_NAME varchar
 );
 
 insert into AM_OPTION (AM_ID, AM_VALUE) VALUES ('eml_filename', '{date}-{subject}-{messageId}');

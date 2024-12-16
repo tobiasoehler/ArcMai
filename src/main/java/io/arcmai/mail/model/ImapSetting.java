@@ -20,6 +20,8 @@ public class ImapSetting {
     private String username;
     @Column(name = "PASSWORD")
     private String password;
+    @Column(name = "FOLDER_NAME")
+    private String folderName;
 
     public UUID getId() {
         return id;
@@ -59,5 +61,13 @@ public class ImapSetting {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getFolderName() {
+        return folderName;
+    }
+
+    public void setFolderName(String folderName) {
+        this.folderName = folderName;
     }
 }

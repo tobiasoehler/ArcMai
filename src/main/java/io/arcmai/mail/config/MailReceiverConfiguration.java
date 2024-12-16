@@ -48,7 +48,7 @@ public class MailReceiverConfiguration {
             emailStore.connect(setting.getHost(), setting.getPort(), setting.getUsername(), setting.getPassword());
 
             for (Folder folder : emailStore.getDefaultFolder().list()){
-                loopFolder(folder, "");
+                loopFolder(folder, setting.getFolderName()+"/");
             }
         } finally {
             if (emailStore != null && emailStore.isConnected()) {
