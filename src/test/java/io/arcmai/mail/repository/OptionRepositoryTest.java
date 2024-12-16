@@ -23,4 +23,17 @@ public class OptionRepositoryTest {
                 .usingRecursiveComparison()
                 .isEqualTo(option);
     }
+
+    @Test
+    public void getSyncIntervalInMinutesTest() {
+        var result = optionRepository.findSyncInterval();
+
+        var option = new Option();
+        option.setId("sync_interval_in_minutes");
+        option.setValue("60");
+
+        Assertions.assertThat(result)
+                .usingRecursiveComparison()
+                .isEqualTo(option);
+    }
 }

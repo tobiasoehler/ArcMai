@@ -26,6 +26,14 @@ public class Option {
                 return value;
         }
 
+        public Integer getValueAsInteger(){
+                return Integer.parseInt(value);
+        }
+
+        public Long getValueAsLong(){
+                return Long.parseLong(value);
+        }
+
         public void setValue(String value) {
                 this.value = value;
         }

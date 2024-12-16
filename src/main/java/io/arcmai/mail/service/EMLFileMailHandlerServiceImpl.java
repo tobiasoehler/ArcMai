@@ -17,7 +17,6 @@ import java.util.UUID;
 
 @Service
 public class EMLFileMailHandlerServiceImpl implements MailHandlerService {
-
     @Value("${io.arcmail.basePath}")
     private String basePath;
     @Value("${mail.imap.username}")
@@ -30,42 +29,6 @@ public class EMLFileMailHandlerServiceImpl implements MailHandlerService {
         this.optionRepository = optionRepository;
     }
 
-    @Override
-    public void handleReceivedMail(MimeMessage receivedMessage) {
-        try {
-
-            Folder folder = receivedMessage.getFolder();
-            folder.open(Folder.READ_WRITE);
-
-            Message[] messages = folder.getMessages();
-            fetchMessagesInFolder(folder, messages);
-
-            Arrays.asList(messages).stream().filter(message -> {
-                MimeMessage currentMessage = (MimeMessage) message;
-                try {
-                    return currentMessage.getMessageID().equalsIgnoreCase(receivedMessage.getMessageID());
-                } catch (MessagingException e) {
-                    log.error("Error occurred during process message", e);
-                    return false;
-                }
-            }).forEach(x -> extractMail(x, folder));
-
-            folder.close(true);
-
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
-        }
-    }
-
-    private void fetchMessagesInFolder(Folder folder, Message[] messages) throws MessagingException {
-        FetchProfile contentsProfile = new FetchProfile();
-        contentsProfile.add(FetchProfile.Item.ENVELOPE);
-        contentsProfile.add(FetchProfile.Item.CONTENT_INFO);
-        contentsProfile.add(FetchProfile.Item.FLAGS);
-        contentsProfile.add(FetchProfile.Item.SIZE);
-        folder.fetch(messages, contentsProfile);
-    }
-
     // Method to replace invalid characters in a file path
     public static String replaceInvalidCharacters(String path) {
         // Windows invalid characters (including / and \)
@@ -75,35 +38,22 @@ public class EMLFileMailHandlerServiceImpl implements MailHandlerService {
         return path.replaceAll(invalidChars, "_");
     }
 
-    private void extractMail(Message message, Folder folder) {
-        try {
-            final MimeMessage messageToExtract = (MimeMessage) message;
-            String path = String.format("%s/%s/%s",basePath, username, getFolderPath(folder));
-            Files.createDirectories(Path.of(path));
-            String logFileName = optionRepository.findEMLFilename().getValue()+".eml";
+    @Override
+    public void handleReceivedMail(Message message, String folderPath) throws Exception {
+        final MimeMessage messageToExtract = (MimeMessage) message;
+        String path = String.format("%s/%s/%s",basePath, username, folderPath);
+        Files.createDirectories(Path.of(path));
+        String logFileName = optionRepository.findEMLFilename().getValue()+".eml";
 
 
-            // TODO Date ersetzten
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            logFileName = logFileName.replace("{date}", sdf.format(message.getReceivedDate()));
-            logFileName = logFileName.replace("{subject}", message.getSubject());
-            logFileName= logFileName.replace("{messageId}", ((MimeMessage) message).getMessageID());
+        // TODO Date ersetzten
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        logFileName = logFileName.replace("{date}", sdf.format(message.getReceivedDate()));
+        logFileName = logFileName.replace("{subject}", message.getSubject() != null ? message.getSubject() : "");
+        logFileName= logFileName.replace("{messageId}", ((MimeMessage) message).getMessageID());
 
-            if (!new File(logFileName).exists()){
-                messageToExtract.writeTo(new FileOutputStream(path+logFileName));
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage(), e);
+        if (!new File(logFileName).exists()){
+            messageToExtract.writeTo(new FileOutputStream(path+logFileName));
         }
-    }
-
-    private String getFolderPath(Folder folder) throws MessagingException {
-        String folderPath = "";
-        if (folder != null && !folder.getName().isEmpty()){
-            folderPath += folder.getName()+"/";
-            folderPath += getFolderPath(folder.getParent());
-        }
-
-        return folderPath;
     }
 }

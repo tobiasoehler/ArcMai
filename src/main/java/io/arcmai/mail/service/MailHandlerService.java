@@ -1,10 +1,10 @@
 package io.arcmai.mail.service;
 
 
-import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.Message;
 
 public interface MailHandlerService {
 
-    void handleReceivedMail(MimeMessage message);
+    void handleReceivedMail(Message message, String folderPath) throws Exception;
 
 }

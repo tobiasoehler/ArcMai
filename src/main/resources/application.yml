@@ -2,27 +2,14 @@ mail:
   imap:
     ssl: true
     host: "imap-endpoint"
-    port: "imap-port"
+    port: 993
     username: "change"
     password: "it"
-
 io:
   arcmail:
     basePath: "basePath"
 
-# Task execution
 spring:
-  task:
-    execution:
-      thread-name-prefix: autohost-task-
-      pool:
-        core-size: 2
-        max-size: 200
-        queue-capacity: 10000
-    scheduling:
-      thread-name-prefix: mail-receiver-
-      pool:
-        size: 2
   datasource:
-    url: "jdbc:h2:file:./target/db/ArcMai"
+    url: "jdbc:h2:file:./db/ArcMai"
     driver-class-name: org.h2.Driver
