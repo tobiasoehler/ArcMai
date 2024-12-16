@@ -1,5 +1,7 @@
 package io.arcmai.mail.config;
 
+import io.arcmai.mail.model.ImapSetting;
+import io.arcmai.mail.repository.ImapSettingRepository;
 import io.arcmai.mail.service.MailHandlerService;
 import jakarta.mail.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,18 +16,23 @@ import java.util.logging.Logger;
 @EnableScheduling
 public class MailReceiverConfiguration {
     private final MailHandlerService mailHandlerService;
-    @Value("${mail.imap.username}") String username;
-    @Value("${mail.imap.host}") String host;
-    @Value("${mail.imap.port}") Integer port;
-    @Value("${mail.imap.password}") String password;
+    private final ImapSettingRepository imapSettingRepository;
     Logger logger =Logger.getLogger(MailReceiverConfiguration.class.getName());
 
-    public MailReceiverConfiguration(MailHandlerService mailHandlerService) {
+    public MailReceiverConfiguration(MailHandlerService mailHandlerService, ImapSettingRepository imapSettingRepository) {
         this.mailHandlerService = mailHandlerService;
+        this.imapSettingRepository = imapSettingRepository;
     }
 
     @Scheduled(fixedRateString = "#{optionRepository.findSyncInterval().valueAsLong * 60 * 1000}")
     public void saveMailsToDB() throws Exception {
+        var setting = imapSettingRepository.findAll();
+        for (ImapSetting imapSetting : setting) {
+            handleMailbox(imapSetting);
+        }
+    }
+
+    private void handleMailbox(ImapSetting setting) throws Exception {
         Store emailStore = null;
 
         Properties javaMailProperties = new Properties();
@@ -38,10 +45,10 @@ public class MailReceiverConfiguration {
 
         try {
             emailStore = emailSession.getStore();
-            emailStore.connect(host, port, username, password);
+            emailStore.connect(setting.getHost(), setting.getPort(), setting.getUsername(), setting.getPassword());
 
             for (Folder folder : emailStore.getDefaultFolder().list()){
-               loopFolder(folder, "");
+                loopFolder(folder, "");
             }
         } finally {
             if (emailStore != null && emailStore.isConnected()) {
